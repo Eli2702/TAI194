@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 
 app= FastAPI()
@@ -19,7 +19,19 @@ def home():
             "vencimiento": "14-02-24",
             "Estado": "Completada"}
 
+#Todas las Tareas
 @app.get('/todasTareas', tags=['Operaciones CRUD'])
 def leer():
     return {'Tareas Registradas' : tareas}
+
+
+#Crear tarea
+@app.post('/', tags=['Operaciones CRUD'])
+def guardar(tarea:dict):
+    for usr in tareas:
+        if usr["id"]== tarea.get("id"):
+            raise  HTTPException(status_code=400,detail="El usuario ya existe.")
+    
+    tareas.append(tarea)
+    return tarea
 
