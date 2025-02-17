@@ -19,6 +19,14 @@ def home():
             "vencimiento": "14-02-24",
             "Estado": "Completada"}
 
+#Buscar tarea por ID
+@app.get('/tarea/{id}', tags=['Operaciones CRUD'])
+def buscar(id:int):
+    for index,  tra in enumerate(tareas):
+        if tra ["id"] == id:
+            return tareas[index]
+    raise HTTPException(status_code=400,detail="Tarea no encontrada")
+
 #Todas las Tareas
 @app.get('/todasTareas', tags=['Operaciones CRUD'])
 def leer():
