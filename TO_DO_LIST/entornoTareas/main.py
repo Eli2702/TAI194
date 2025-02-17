@@ -44,3 +44,11 @@ def actualizar(id:int,tareaActualizada:dict):
             return tareas[index]
     raise HTTPException(status_code=400,detail="Tarea no encontrada")
 
+#Eliminar tarea
+@app.delete('/tarea/{id}', tags=['Operaciones CRUD'])
+def eliminar(id:int):
+    for index,  tra in enumerate(tareas):
+        if tra["id"] == id:
+            return tareas.pop(index)
+    raise HTTPException(status_code=400,detail="Esta tarea no se puede borrar")
+
