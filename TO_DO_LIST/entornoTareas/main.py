@@ -30,8 +30,17 @@ def leer():
 def guardar(tarea:dict):
     for usr in tareas:
         if usr["id"]== tarea.get("id"):
-            raise  HTTPException(status_code=400,detail="El usuario ya existe.")
+            raise  HTTPException(status_code=400,detail="Esta tarea ya existe")
     
     tareas.append(tarea)
     return tarea
+
+#Actualizar tarea
+@app.put('/tarea/{id}', tags=['Operaciones CRUD'])
+def actualizar(id:int,tareaActualizada:dict):
+    for index,  tra in enumerate(tareas):
+        if tra ["id"] == id:
+            tareas[index].update(tareaActualizada)
+            return tareas[index]
+    raise HTTPException(status_code=400,detail="Tarea no encontrada")
 
