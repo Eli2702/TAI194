@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from typing import Optional
+from typing import Optional, List
+from pydantic import BaseModel
 
 app= FastAPI(
     title="Miprimer API",
@@ -7,11 +8,18 @@ app= FastAPI(
     version="1.0.0"
 )
 
+class modelUsuario(BaseModel):
+    id: int 
+    nombre: str
+    edad: int
+    correo: str
+
+
 usuarios =[
-    {"id":1, "nombre": "Eduardo", "edad": 21},
-    {"id":2, "nombre": "Maria", "edad": 28},
-    {"id":3, "nombre": "Jesus", "edad": 34},
-    {"id":4, "nombre": "Ana", "edad": 25}
+    {"id":1, "nombre": "Eduardo", "edad": 21, "correo": "edu21@example.com"},
+    {"id":2, "nombre": "Maria", "edad": 28, "correo": "mar28@example.com"},
+    {"id":3, "nombre": "Jesus", "edad": 34,"correo": "jes34@example.com"},
+    {"id":4, "nombre": "Ana", "edad": 25, "correo": "ana253@example.com"}
 ]
 
 
@@ -21,26 +29,26 @@ def home():
     return {'Hello': 'worl fastApi'}
 
 #ruta CONSULTA TODOS
-@app.get('/todosusuarios', tags=['Operaciones CRUD'])
+@app.get('/todosusuarios',response_model= List[modelUsuario], tags=['Operaciones CRUD'])
 def leer():
-    return {'Usuarios Registrados' : usuarios}
+    return usuarios
 
 #ruta POST
-@app.post('/', tags=['Operaciones CRUD'])
-def guardar(usuario:dict):
+@app.post('/usuarios/', response_model=modelUsuario, tags=['Operaciones CRUD'])
+def guardar(usuario:modelUsuario):
     for usr in usuarios:
-        if usr["id"]== usuario.get("id"):
+        if usr["id"]== usuario.id:
             raise  HTTPException(status_code=400,detail="El usuario ya existe.")
     
     usuarios.append(usuario)
     return usuario
 
 #ruta para actualizar
-@app.put('/usuarios/{id}', tags=['Operaciones CRUD'])
-def actualizar(id:int,usuarioActualizado:dict):
+@app.put('/usuarios/{id}', response_model=modelUsuario, tags=['Operaciones CRUD'])
+def actualizar(id:int,usuarioActualizado:modelUsuario):
     for index,  usr in enumerate(usuarios):
         if usr["id"] == id:
-            usuarios[index].update(usuarioActualizado)
+            usuarios[index] = usuarioActualizado.model_dump()
             return usuarios[index]
     raise HTTPException(status_code=400,detail="El usuario no existe.")
 
