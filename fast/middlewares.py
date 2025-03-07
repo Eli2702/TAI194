@@ -10,6 +10,6 @@ class BearerJWT(HTTPBearer):
         if not isinstance(data, dict): #verificar si es un diccionario valido
             raise HTTPException(status_code=401, detail="Token inválido")
         
-        if data.get('email') != 'elileon27@example.com': #usar .get() para evitar KeyError
-            raise HTTPException(status_code=403, detail="Crdenciales no válidas")
+        if data.get('mail') != 'elileon27@example.com': #usar .get() para evitar KeyError
+            raise HTTPException(status_code=403, detail="Credenciales no válidas")
         
