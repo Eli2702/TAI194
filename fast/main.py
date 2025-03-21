@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import Optional, List
-from fast.modelsPydantic import modelUsuario, modelAuth
+from modelsPydantic import modelUsuario, modelAuth
 from genToken import createToken
+from DB.conexion import Session, engine, Base
+from models.modelsDB import User
 from middlewares import BearerJWT
 
 app= FastAPI(
@@ -10,6 +12,8 @@ app= FastAPI(
     description="Alma Elizabeth Tapia León",
     version="1.0.0"
 )
+
+Base.metadata.create_all(bind= engine)
 
 
 
@@ -45,12 +49,21 @@ def leer():
 #ruta POST
 @app.post('/usuarios/', response_model=modelUsuario, tags=['Operaciones CRUD'])
 def guardar(usuario:modelUsuario):
-    for usr in usuarios:
-        if usr["id"]== usuario.id:
-            raise  HTTPException(status_code=400,detail="El usuario ya existe.")
-    
-    usuarios.append(usuario)
-    return usuario
+    db=Session()
+    try:
+        db.add(User(**usuario.model_dump()))
+        db.commit()
+        return JSONResponse(status_code=201, 
+                            content={"mesage": "Usuario guardado", 
+                                    "usuario": usuario.model_dump()})
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, 
+                            content={"mesage": "No fue posible guardar usuario ", 
+                                    "Error": str(e)})
+
+    finally:
+        db.close()
 
 #ruta para actualizar
 @app.put('/usuarios/{id}', response_model=modelUsuario, tags=['Operaciones CRUD'])
