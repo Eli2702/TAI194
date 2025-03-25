@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from typing import Optional, List
 from modelsPydantic import modelUsuario, modelAuth
 from genToken import createToken
@@ -42,9 +43,44 @@ def auth(credenciales:modelAuth):
 
 
 #ruta CONSULTA TODOS
-@app.get('/todosusuarios',dependencies=[Depends(BearerJWT())], response_model= List[modelUsuario], tags=['Operaciones CRUD'])
+@app.get('/todosusuarios',tags=['Operaciones CRUD'])
 def leer():
-    return usuarios
+    db=Session()
+    try:
+        consulta= db.query(User).all()
+        return JSONResponse(content=jsonable_encoder(consulta))
+
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, 
+                            content={"mesage": "No fue posible consultar", 
+                                    "Error": str(e)})
+
+    finally:
+        db.close()
+
+
+#Buscar por ID
+@app.get('/usuario/{id}', tags=['Operaciones CRUD'])
+def leeruno(id:int):
+    db=Session()
+    try:
+        consulta1= db.query(User).filter(User.id == id).first()
+        if not consulta1:
+            return JSONResponse(status_code=404, content={"Mensaje": "Usuario no encontrado"})
+
+        return JSONResponse(content=jsonable_encoder(consulta1))
+
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, 
+                            content={"mesage": "No fue posible consultar", 
+                                    "Error": str(e)})
+
+    finally:
+        db.close()
+
+    
 
 #ruta POST
 @app.post('/usuarios/', response_model=modelUsuario, tags=['Operaciones CRUD'])
@@ -64,6 +100,7 @@ def guardar(usuario:modelUsuario):
 
     finally:
         db.close()
+
 
 #ruta para actualizar
 @app.put('/usuarios/{id}', response_model=modelUsuario, tags=['Operaciones CRUD'])
