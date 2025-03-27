@@ -105,16 +105,47 @@ def guardar(usuario:modelUsuario):
 #ruta para actualizar
 @app.put('/usuarios/{id}', response_model=modelUsuario, tags=['Operaciones CRUD'])
 def actualizar(id:int,usuarioActualizado:modelUsuario):
-    for index,  usr in enumerate(usuarios):
-        if usr["id"] == id:
-            usuarios[index] = usuarioActualizado.model_dump()
-            return usuarios[index]
-    raise HTTPException(status_code=400,detail="El usuario no existe.")
+    db=Session()
+    try:
+        consulta2= db.query(User).filter(User.id == id).first()
+        if not consulta2:
+            return JSONResponse(status_code=404, content={"Mensaje": "Usuario no encontrado"})
+        
+        for key, value in usuarioActualizado.model_dump().items():
+            setattr(consulta2, key, value)
+
+        db.commit()  # Confirmar cambios
+        db.refresh(consulta2)
+
+        return JSONResponse(content=jsonable_encoder(consulta2))
+    
+    except Exception as e:
+         db.rollback()
+         return JSONResponse(status_code=500, 
+                            content={"mesage": "No fue posible actualizar usuario ", 
+                                    "Error": str(e)})
+
+    finally:
+        db.close()
 
 #ruta para eliminar
 @app.delete('/usuarios/{id}', tags=['Operaciones CRUD'])
 def eliminar(id:int):
-    for index,  usr in enumerate(usuarios):
-        if usr["id"] == id:
-            return usuarios.pop(index)
-    raise HTTPException(status_code=400,detail="El usuario no se puede borrar")
+    db=Session()
+    try:
+        consulta3= db.query(User).filter(User.id == id).first()
+        if not consulta3:
+            return JSONResponse(status_code=404, content={"Mensaje": "Usuario no eliminado"})
+        db.delete(consulta3)  
+        db.commit()
+
+        return JSONResponse(content=jsonable_encoder(consulta3))
+
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, 
+                            content={"mesage": "No fue posible consultar", 
+                                    "Error": str(e)})
+
+    finally:
+        db.close()
